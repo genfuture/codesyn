@@ -83,25 +83,40 @@ def load_data_page():
         )
         
         if uploaded_file:
-            # Save to temp file
+            # Show upload info
+            file_size_mb = len(uploaded_file.getvalue()) / (1024 * 1024)
+            st.info(f"📤 Uploading: {uploaded_file.name} ({file_size_mb:.2f} MB)")
+            
+            if file_size_mb > 50:
+                st.warning("⏳ Large file detected. This may take 1-2 minutes to upload and process. Please be patient...")
+            
+            # Save to temp file with progress
             temp_path = Path(f"/tmp/{uploaded_file.name}")
-            with open(temp_path, 'wb') as f:
-                f.write(uploaded_file.getbuffer())
+            progress_bar = st.progress(0)
+            status_text = st.empty()
             
             try:
-                with st.spinner("Loading data..."):
+                status_text.text("Saving file...")
+                with open(temp_path, 'wb') as f:
+                    f.write(uploaded_file.getbuffer())
+                progress_bar.progress(25)
+                
+                status_text.text("Loading data...")
+                with st.spinner("Reading file format..."):
                     loader = DataLoader(temp_path)
                     
                     # Show file info
                     file_info = loader.get_file_info()
-                    st.info(f"""
-                    **File:** {file_info['file_name']}  
+                    st.success(f"""
+                    ✅ **File:** {file_info['file_name']}  
                     **Size:** {file_info['file_size_mb']} MB  
                     **Type:** {file_info['extension']}  
                     **Large File:** {'Yes' if file_info['is_large_file'] else 'No'}
                     """)
+                    progress_bar.progress(50)
                     
                     # Load based on file type
+                    status_text.text("Parsing data...")
                     if temp_path.suffix == '.xlsx' or temp_path.suffix == '.xls':
                         # Excel with sheet selection
                         excel_file = pd.ExcelFile(temp_path)
@@ -109,20 +124,36 @@ def load_data_page():
                         df = loader.load_excel(sheet_name=sheet)
                     else:
                         df = loader.load()
+                    progress_bar.progress(75)
                     
                     # Convert Dask to Pandas if needed (for large files, compute sample)
+                    status_text.text("Processing large file...")
                     if hasattr(df, 'compute'):
-                        st.warning("Large file detected. Loading sample for preview...")
-                        df = df.head(100000).compute()
+                        st.warning("⚠️ Large file detected. Loading sample (50,000 rows) for preview and cleaning...")
+                        df = df.head(50000).compute()
+                    
+                    # For very large pandas dataframes, also sample
+                    elif len(df) > 100000:
+                        st.warning(f"⚠️ Large dataset ({len(df):,} rows). Sampling 50,000 rows for performance...")
+                        df = df.sample(n=50000, random_state=42)
+                    
+                    progress_bar.progress(90)
+                    status_text.text("Finalizing...")
                     
                     st.session_state.df = df
                     st.session_state.questionnaire = CleaningQuestionnaire(df)
+                    
+                    progress_bar.progress(100)
+                    status_text.empty()
+                    progress_bar.empty()
                     
                     st.success(f"✅ Loaded {len(df):,} rows and {len(df.columns)} columns")
                     st.dataframe(df.head(10))
                     
             except Exception as e:
-                st.error(f"Error loading file: {str(e)}")
+                progress_bar.empty()
+                status_text.empty()
+                st.error(f"❌ Error loading file: {str(e)}")
                 st.exception(e)
     
     else:  # SQL Database
@@ -371,9 +402,19 @@ def results_page():
     ])
     
     with tab1:
-        st.subheader("Cleaned Dataset")
-        st.dataframe(st.session_state.cleaned_df)
+        st.subheader("Cleaned Dataset Preview")
         
+        # Limit display for large datasets to prevent 502 errors
+        max_rows = 1000
+        df_to_show = st.session_state.cleaned_df
+        
+        if len(df_to_show) > max_rows:
+            st.warning(f"⚠️ Dataset has {len(df_to_show):,} rows. Showing first {max_rows:,} rows to prevent timeout.")
+            df_to_show = df_to_show.head(max_rows)
+        
+        st.dataframe(df_to_show, use_container_width=True, height=400)
+        
+        st.write(f"**Total Rows:** {len(st.session_state.cleaned_df):,}")
         st.write(f"**Shape:** {st.session_state.cleaned_df.shape}")
         st.write(f"**Memory:** {st.session_state.cleaned_df.memory_usage(deep=True).sum() / 1024 / 1024:.2f} MB")
     
