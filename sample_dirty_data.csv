@@ -1,0 +1,13 @@
+Name,Age,Email,City,Salary,Join_Date,Active,Department
+  John Doe  ,25.0,john@example.com,NEW YORK,50000.0,2024-01-15,yes,Sales
+Jane Smith,30.0,jane@test.com,Los Angeles,60000.0,01/20/2024,no,Sales
+Bob Johnson,-5.0,invalid-email,chicago,45000.0,2024-02-10,true,Engineering
+,,bob@test.com,Houston,,15/03/2024,false,Sales
+Alice Brown,45.0,alice@example.com,phoenix,75000.0,,1,Engineering
+  Charlie Davis  ,999.0,charlie@test.com,Philadelphia,80000.0,2024-04-05,0,Marketing
+Eve Wilson,28.0,,San Antonio,55000.0,05/10/2024,Y,Sales
+Frank Miller,35.0,frank@test.com,,65000.0,2024-06-15,N,Engineering
+Grace Lee,40.0,grace@example.com,San Diego,70000.0,,,Marketing
+Henry Clark,50.0,henry@test.com,Dallas,85000.0,2024-08-01,yes,Sales
+John Doe,25.0,john@example.com,NEW YORK,50000.0,2024-01-15,yes,Sales
+Jane Smith,30.0,jane@test.com,Los Angeles,60000.0,01/20/2024,no,Sales

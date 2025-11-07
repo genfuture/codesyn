@@ -1,0 +1,35 @@
+# Core data processing libraries
+pandas>=2.0.0,<2.2.0
+numpy>=1.24.0,<1.27.0
+openpyxl==3.1.2  # Excel support
+xlrd==2.0.1  # Legacy Excel support
+lxml==4.9.3  # XML parsing
+sqlalchemy==2.0.23  # SQL database support
+pymysql==1.1.0  # MySQL connector
+psycopg2-binary==2.9.9  # PostgreSQL connector
+
+# Data validation and cleaning
+pydantic==2.5.0
+python-dateutil==2.8.2
+chardet==5.2.0  # Character encoding detection
+
+# UI Framework
+streamlit==1.29.0
+plotly==5.18.0  # Interactive visualizations
+
+# Machine Learning for advanced cleaning
+scikit-learn==1.3.2
+scipy==1.11.4
+
+# File handling for large files
+dask[complete]>=2024.1.0
+pyarrow>=14.0.0  # Parquet support for efficient storage
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+faker==20.1.0  # Generate test data
+
+# Utilities
+tqdm==4.66.1  # Progress bars
+colorama==0.4.6  # Colored terminal output
