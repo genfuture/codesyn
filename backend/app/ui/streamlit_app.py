@@ -45,6 +45,11 @@ def main():
     st.title("🧹 Advanced Data Cleaning Tool")
     st.markdown("### Support for CSV, SQL, Excel, JSON, XML, and TSV files")
     
+    # Show deployment-specific warnings
+    import os
+    if os.getenv('RENDER'):
+        st.info("ℹ️ **Running on Render Free Tier**: File uploads limited to 300MB. For larger files, use the CLI tool locally.")
+    
     # Sidebar for navigation
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Go to", [
@@ -77,9 +82,12 @@ def load_data_page():
     data_source = st.radio("Data Source", ["Upload File", "SQL Database"])
     
     if data_source == "Upload File":
+        st.info("💡 **Tip for large files (>100MB):** Consider using a smaller sample or the CLI tool locally for better performance.")
+        
         uploaded_file = st.file_uploader(
             "Choose a file",
-            type=['csv', 'tsv', 'xlsx', 'xls', 'json', 'jsonl', 'xml']
+            type=['csv', 'tsv', 'xlsx', 'xls', 'json', 'jsonl', 'xml'],
+            help="Maximum file size: 300MB. Large files will be automatically sampled."
         )
         
         if uploaded_file:
@@ -89,6 +97,12 @@ def load_data_page():
             
             if file_size_mb > 50:
                 st.warning("⏳ Large file detected. This may take 1-2 minutes to upload and process. Please be patient...")
+                st.warning("⚠️ On free hosting, files >100MB may timeout. Consider using the CLI tool locally for best results.")
+            
+            # Limit file size on Render (free tier has strict limits)
+            if file_size_mb > 300:
+                st.error("❌ File too large for web upload (>300MB). Please use the CLI tool locally or try a smaller sample.")
+                return
             
             # Save to temp file with progress
             temp_path = Path(f"/tmp/{uploaded_file.name}")
@@ -129,13 +143,13 @@ def load_data_page():
                     # Convert Dask to Pandas if needed (for large files, compute sample)
                     status_text.text("Processing large file...")
                     if hasattr(df, 'compute'):
-                        st.warning("⚠️ Large file detected. Loading sample (50,000 rows) for preview and cleaning...")
-                        df = df.head(50000).compute()
+                        st.warning("⚠️ Large file detected. Loading sample (25,000 rows) for web preview...")
+                        df = df.head(25000).compute()
                     
                     # For very large pandas dataframes, also sample
-                    elif len(df) > 100000:
-                        st.warning(f"⚠️ Large dataset ({len(df):,} rows). Sampling 50,000 rows for performance...")
-                        df = df.sample(n=50000, random_state=42)
+                    elif len(df) > 50000:
+                        st.warning(f"⚠️ Large dataset ({len(df):,} rows). Sampling 25,000 rows for web performance...")
+                        df = df.sample(n=min(25000, len(df)), random_state=42)
                     
                     progress_bar.progress(90)
                     status_text.text("Finalizing...")
