@@ -37,7 +37,7 @@ def analyze_data_quality(df, name="Dataset"):
     missing_cols = missing_by_col[missing_by_col > 0].sort_values(ascending=False)
     if len(missing_cols) > 0:
         print(f"  Columns with missing data:")
-        for col, count in missing_cols.head(300).items():
+        for col, count in missing_cols.head(10).items():
             pct = count / len(df) * 100
             print(f"    • {col}: {count:,} ({pct:.1f}%)")
     
@@ -60,8 +60,8 @@ def analyze_data_quality(df, name="Dataset"):
         print(f"  {i}. {col:30} | Type: {str(dtype):10} | Unique: {unique:6,} | Missing: {missing:6,}")
     
     # Sample data
-    print(f"\n📄 Sample Data (first 300 rows):")
-    print(df.head(300).to_string())
+    print(f"\n📄 Sample Data (first 3 rows):")
+    print(df.head(3).to_string())
     
     return {
         'rows': len(df),
